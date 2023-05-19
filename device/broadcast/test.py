@@ -2,13 +2,12 @@ from pprint import pformat
 
 from twisted.internet import reactor
 from twisted.internet.defer import Deferred
-from twisted.internet.protocol import Protocol, connectionDone
-from twisted.python import failure
+from twisted.internet.protocol import Protocol
 from twisted.web.client import Agent
 from twisted.web.http_headers import Headers
 
 
-class BroadProtocol(Protocol):
+class BeginningPrinter(Protocol):
     def __init__(self, finished):
         self.finished = finished
         self.remaining = 1024 * 10
@@ -20,7 +19,7 @@ class BroadProtocol(Protocol):
             print(display)
             self.remaining -= len(display)
 
-    def connectionLost(self, reason: failure.Failure = connectionDone):
+    def connectionLost(self, reason):
         print("Finished receiving body:", reason.getErrorMessage())
         self.finished.callback(None)
 
@@ -41,7 +40,7 @@ def cbRequest(response):
     print("Response headers:")
     print(pformat(list(response.headers.getAllRawHeaders())))
     finished = Deferred()
-    response.deliverBody(BroadProtocol(finished))
+    response.deliverBody(BeginningPrinter(finished))
     return finished
 
 
