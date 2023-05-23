@@ -7,10 +7,34 @@ from device.phone.apps import PhoneClientFactory
 
 import sys
 
-if __name__ == "__main__":
-    reactor.suggestThreadPoolSize(3)
-    log.startLogging(sys.stdout)
-    reactor.connectTCP('localhost', 8000, VehicleClientFactory())
-    reactor.connectTCP('localhost', 9000, VMSClientFactory())
-    reactor.connectTCP('localhost', 9001, PhoneClientFactory())
+
+def init():
+    # 初始化线程池线程数量
+    reactor.suggestThreadPoolSize(30)
+
+    # 利用字典调用函数
+    factory_dic = {
+        'VMSClientFactory': VMSClientFactory,
+        'VehicleClientFactory': VehicleClientFactory,
+        'PhoneClientFactory': PhoneClientFactory
+    }
+    # 加载使能的驱动，并建立连接
+    with open('./config.json', 'r') as c:
+        import json
+        config = json.load(c)
+    device = config['device']
+    for key, value in device.items():
+        if value['enable'] == 1:
+            fun_str = key + "ClientFactory"
+            reactor.connectTCP(value['ip'], value['port'], factory_dic[fun_str]())
+
+
+def run():
     reactor.run()
+
+
+if __name__ == "__main__":
+
+    init()
+
+    run()

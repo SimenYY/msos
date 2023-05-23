@@ -13,13 +13,13 @@ class PhoneProtocol(WebSocketClientProtocol):
 
     def onOpen(self):
         print("WebSocket connection open.")
+        self.factory.reactor.callInThread(self.hello)
 
-        def hello():
+    def hello(self):
+        import time
+        while True:
+            time.sleep(2)
             self.sendMessage("Hello, world!".encode('utf8'))
-            self.factory.reactor.callLater(1, hello)
-
-        # start sending messages every second ..
-        hello()
 
     def onMessage(self, payload, isBinary):
         if isBinary:
