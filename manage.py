@@ -1,6 +1,6 @@
 from twisted.internet import reactor
 from twisted.python import log
-
+from twisted.internet.task import LoopingCall
 from device.vehicle.apps import VehicleClientFactory
 from device.vms.apps import VMSClientFactory
 from device.phone.apps import PhoneClientFactory
@@ -33,8 +33,10 @@ def run():
     reactor.run()
 
 
+def test():
+    print(1)
+
+
 if __name__ == "__main__":
-
     init()
-
     run()

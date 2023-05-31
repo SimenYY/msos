@@ -1,15 +1,24 @@
-from twisted.web import server, resource
-from twisted.internet import reactor, endpoints
+from twisted.internet import reactor
+from twisted.web.server import Request, Site
+from twisted.web.resource import Resource
+import json
 
 
-class Simple(resource.Resource):
-    isLeaf = True
-
+class AdvCore(Resource):
     def render_GET(self, request):
-        return b"<html>Hello, world!</html>"
+        # request.setHeader("Content-Type", "application/json")
+        if request.path == "/cmd/":
+            print(1)
+        elif request.path == "/inquire/":
+            print(2)
 
 
-site = server.Site(Simple())
-endpoint = endpoints.TCP4ServerEndpoint(reactor, 8080)
-endpoint.listen(site)
+root = AdvCore()
+root.putChild(b"advcore", AdvCore())
+factory = Site(root)
+reactor.listenTCP(8080, factory)
 reactor.run()
+
+
+
+
