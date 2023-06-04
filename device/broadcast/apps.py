@@ -3,7 +3,7 @@ import json
 from twisted.internet import reactor
 from twisted.internet.defer import Deferred
 from twisted.python import failure
-from twisted.web.client import Agent
+from twisted.web.client import Agent, HTTPConnectionPool
 from twisted.internet.protocol import Protocol, connectionDone
 from twisted.web.http_headers import Headers
 from pprint import pformat
@@ -15,6 +15,9 @@ class BroadcastProtocol(Protocol):
     def __init__(self, finished):
         self.finished = finished
 
+    def connectionMade(self):
+        pass
+
     def dataReceived(self, data: bytes):
         reactor.callInThread(self.parse_data, data)
 
@@ -23,16 +26,16 @@ class BroadcastProtocol(Protocol):
         self.finished.callback(None)
 
     def parse_data(self, data: bytes):
-        pass
+        ret = json.loads(data)
+        global token
+        token = ret["token"]
+        print(token)
 
 
-headers = Headers({
-    "User-Agent": ["Twisted Web Client"],
-    "Content-Type": ["application/json; charset=utf-8"]
-})
-
-agent = Agent(reactor)
-ip_port = "127.0.0.1:8001"
+pool = HTTPConnectionPool(reactor)
+agent = Agent(reactor, pool=pool)
+ip_port = "172.16.11.26:8001"
+token = ""
 
 
 def get_token():
@@ -43,20 +46,30 @@ def get_token():
     """
     path = "/api/v29+/auth?name=admin&password=123456"
     url = "http://" + ip_port + path
+    headers = Headers({
+        "User-Agent": ["Twisted Web Client"],
+        "Content-Type": ["application/json; charset=utf-8"]
+    })
     d = agent.request(b"GET", url.encode('utf-8'), headers=headers)
-    d.addCallback(cdResponse)
+    d.addCallback(cpResponse)
 
 
 def refresh_token():
     """
     GET 刷新token
         http://172.16.11.26:8001/api/v29+/auth/refresh
+    注：60mins 刷新一次
     :return:
     """
+    headers = Headers({
+        "User-Agent": ["Twisted Web Client"],
+        "Content-Type": ["application/json; charset=utf-8"],
+        "Authorization": [token]
+    })
     path = "/api/v29+/auth/refresh"
     url = "http://" + ip_port + path
     d = agent.request(b"GET", url.encode('utf-8'), headers=headers)
-    d.addCallback(cdResponse)
+    d.addCallback(cpResponse)
 
 
 def get_terminal_info():
@@ -82,14 +95,18 @@ def get_terminal_info():
     body = json.loads("{}")
     body["company"] = "BL"
     body["actioncode"] = "c2ls_get_server_terminals_status"
-    body["token"] = None
+    body["token"] = token
     body["data"] = ""
     body["result"] = 200
     body["return_message"] = ""
     body["sign"] = "rand string"
 
+    headers = Headers({
+        "User-Agent": ["Twisted Web Client"],
+        "Content-Type": ["application/json; charset=utf-8"]
+    })
     d = agent.request(b"PUT", url.encode('utf-8'), headers=headers, bodyProducer=body)
-    d.addCallback(cdResponse)
+    d.addCallback(cpResponse)
 
 
 def set_mp3_play():
@@ -133,7 +150,8 @@ def set_mp3_play():
     body["data"]["EndPointGroupIDs"] = []
     body["data"]["MusicIDs"] = []
     body["data"]["MusicGroupIDs"] = []
-    body["data"]["TaskID"] = ""
+    from utils import generate_random_31_number
+    body["data"]["TaskID"] = "{" + generate_random_31_number() + "}"
     body["data"]["TaskName"] = ""
     body["data"]["Priority"] = ""
     body["data"]["Volume"] = ""
@@ -142,16 +160,60 @@ def set_mp3_play():
     body["return_message"] = ""
     body["sign"] = "rand string"
 
+    headers = Headers({
+        "User-Agent": ["Twisted Web Client"],
+        "Content-Type": ["application/json; charset=utf-8"]
+    })
     d = agent.request(b"PUT", url.encode('utf-8'), headers=headers, bodyProducer=body)
-    d.addCallback(cdResponse)
+    d.addCallback(cpResponse)
 
 
-def cdResponse(response):
+def stop_task():
+    """
+    PUT 停止任务
+    http://172.16.11.26:8001/api/v29+/ws/forwarder
+        body
+        {
+        "company" : "BL",
+        "actioncode" : "c2ls_stop_task",
+        "token" : ",
+        "data" : {
+        "TaskID" : "{098ADF3F20E54AFAAE23AA5DB509176D}"
+        },
+        "result" : 200,
+        "return_message" : "",
+        "sign" : "rand string"
+        }
+    注意：TaskID 是用于区别任务的,由大括号加31位随机数组成,由调用方自己生成随机数
+    :return:
+    """
+    path = "/api/v29+/ws/forwarder"
+    url = "http://" + ip_port + path
+    headers = Headers({
+        "User-Agent": ["Twisted Web Client"],
+        "Content-Type": ["application/json; charset=utf-8"]
+    })
+
+    body = json.loads("{}")
+    body["company"] = "BL"
+    body["actioncode"] = "c2ls_stop_task"
+    body["token"] = token
+    body["data"] = {}
+    body["data"]["TaskID"] = ""
+    body["result"] = 200
+    body["return_message"] = ""
+    body["sign"] = "rand string"
+    d = agent.request(b"PUT", url.encode('utf-8'), headers=headers, bodyProducer=body)
+    d.addCallback(cpResponse)
+
+
+def cpResponse(response):
     finished = Deferred()
     response.deliverBody(BroadcastProtocol(finished))
     return finished
 
 
 get_token()
+refresh_token()
 
 reactor.run()
