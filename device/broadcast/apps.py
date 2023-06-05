@@ -16,6 +16,7 @@ class BroadcastProtocol(Protocol):
         self.finished = finished
 
     def connectionMade(self):
+        # 连接建立时可以做一些事情
         pass
 
     def dataReceived(self, data: bytes):
@@ -27,15 +28,11 @@ class BroadcastProtocol(Protocol):
 
     def parse_data(self, data: bytes):
         ret = json.loads(data)
-        global token
-        token = ret["token"]
-        print(token)
 
 
 pool = HTTPConnectionPool(reactor)
 agent = Agent(reactor, pool=pool)
 ip_port = "172.16.11.26:8001"
-token = ""
 
 
 def get_token():
@@ -50,11 +47,14 @@ def get_token():
         "User-Agent": ["Twisted Web Client"],
         "Content-Type": ["application/json; charset=utf-8"]
     })
-    d = agent.request(b"GET", url.encode('utf-8'), headers=headers)
+    d = agent.request(
+        b"GET",
+        url.encode('utf-8'),
+        headers=headers)
     d.addCallback(cpResponse)
 
 
-def refresh_token():
+def refresh_token(old_token):
     """
     GET 刷新token
         http://172.16.11.26:8001/api/v29+/auth/refresh
@@ -64,15 +64,18 @@ def refresh_token():
     headers = Headers({
         "User-Agent": ["Twisted Web Client"],
         "Content-Type": ["application/json; charset=utf-8"],
-        "Authorization": [token]
+        "Authorization": [old_token]
     })
     path = "/api/v29+/auth/refresh"
     url = "http://" + ip_port + path
-    d = agent.request(b"GET", url.encode('utf-8'), headers=headers)
+    d = agent.request(
+        b"GET",
+        url.encode('utf-8'),
+        headers=headers)
     d.addCallback(cpResponse)
 
 
-def get_terminal_info():
+def get_terminal_info(token):
     """
     PUT 获取终端信息
         http://172.16.11.26:8001/api/v29+/ws/forwarder
@@ -105,11 +108,15 @@ def get_terminal_info():
         "User-Agent": ["Twisted Web Client"],
         "Content-Type": ["application/json; charset=utf-8"]
     })
-    d = agent.request(b"PUT", url.encode('utf-8'), headers=headers, bodyProducer=body)
+    d = agent.request(
+        b"PUT",
+        url.encode('utf-8'),
+        headers=headers,
+        bodyProducer=BytesProducer(json.dumps(body).encode('utf-8')))
     d.addCallback(cpResponse)
 
 
-def set_mp3_play():
+def set_mp3_play(EndPointIDs_list, MusicIDs_list, token):
     """
     PUT 点播服务器音乐（mp3播放）
         http://172.16.21.183:8001/api/v29+/ws/forwarder
@@ -143,15 +150,16 @@ def set_mp3_play():
     body = json.loads("{}")
     body["company"] = "BL"
     body["actioncode"] = "c2ls_mobile_terminal_damand_music"
-    body["token"] = None
+    body["token"] = token
     body["data"] = {}
     body["data"]["EndPointsAdditionalProp"] = ""
-    body["data"]["EndPointIDs"] = []
+    body["data"]["EndPointIDs"] = EndPointIDs_list
     body["data"]["EndPointGroupIDs"] = []
-    body["data"]["MusicIDs"] = []
+    body["data"]["MusicIDs"] = MusicIDs_list
     body["data"]["MusicGroupIDs"] = []
     from utils import generate_random_31_number
-    body["data"]["TaskID"] = "{" + generate_random_31_number() + "}"
+    task_id = "{" + generate_random_31_number() + "}"
+    body["data"]["TaskID"] = task_id
     body["data"]["TaskName"] = ""
     body["data"]["Priority"] = ""
     body["data"]["Volume"] = ""
@@ -164,11 +172,16 @@ def set_mp3_play():
         "User-Agent": ["Twisted Web Client"],
         "Content-Type": ["application/json; charset=utf-8"]
     })
-    d = agent.request(b"PUT", url.encode('utf-8'), headers=headers, bodyProducer=body)
+    d = agent.request(
+        b"PUT",
+        url.encode('utf-8'),
+        headers=headers,
+        bodyProducer=BytesProducer(json.dumps(body).encode('utf-8')))
     d.addCallback(cpResponse)
+    return task_id
 
 
-def stop_task():
+def stop_task(task_id, token):
     """
     PUT 停止任务
     http://172.16.11.26:8001/api/v29+/ws/forwarder
@@ -199,11 +212,15 @@ def stop_task():
     body["actioncode"] = "c2ls_stop_task"
     body["token"] = token
     body["data"] = {}
-    body["data"]["TaskID"] = ""
+    body["data"]["TaskID"] = task_id
     body["result"] = 200
     body["return_message"] = ""
     body["sign"] = "rand string"
-    d = agent.request(b"PUT", url.encode('utf-8'), headers=headers, bodyProducer=body)
+    d = agent.request(
+        b"PUT",
+        url.encode('utf-8'),
+        headers=headers,
+        bodyProducer=BytesProducer(json.dumps(body).encode('utf-8')))
     d.addCallback(cpResponse)
 
 
