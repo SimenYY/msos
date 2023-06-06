@@ -10,7 +10,6 @@ from twisted.internet.task import LoopingCall
 
 from bytesprod import BytesProducer
 
-
 # def refresh_token(old_token: str):
 #     lc = LoopingCall(refresh_token, old_token)
 #     lc.start(3600)
@@ -22,9 +21,14 @@ from bytesprod import BytesProducer
 
 
 class BroadcastProtocol(Protocol):
+    g_token = None
+
     def __init__(self, finished):
         self.finished = finished
         self.buffer = b""
+
+    def __call__(self, *args, **kwargs):
+        pass
 
     def connectionMade(self):
         # 连接建立时可以做一些事情
@@ -44,12 +48,10 @@ class BroadcastProtocol(Protocol):
 
     def parse_data(self, ret: dict):
         self.buffer = b""
-
         action_code = ret["actioncode"]
         token = ret["token"]
         if action_code == "" and token != "":
             print(token)
-            reactor.callInThread(refresh_status, token)
         elif action_code == "ls2c_get_server_terminals_status":
             points = ret["data"]["EndPointsArray"]
             id_status = json.loads("{}")
@@ -58,7 +60,7 @@ class BroadcastProtocol(Protocol):
             print(id_status)
         elif action_code == "ls2c_mobile_terminal_damand_music":
             pass
-        elif action_code == "c2ls_stop_task":
+        elif action_code == "ls2c_stop_task":
             pass
 
 
@@ -70,7 +72,7 @@ class SendHelper:
     def get_token(self):
         """
         GET 获取token
-            http://172.16.11.26:8001/api/v29+/auth?name=admin&password=123456G
+            http://172.16.11.26:8001/api/v29+/auth?name=admin&password=123456
         :return:
         """
         path = "/api/v29+/auth?name=admin&password=123456"
@@ -256,7 +258,6 @@ def cpResponse(response):
     finished = Deferred()
     response.deliverBody(BroadcastProtocol(finished))
     return finished
-
 
 # pool = HTTPConnectionPool(reactor)
 # agent = Agent(reactor, pool=pool)
