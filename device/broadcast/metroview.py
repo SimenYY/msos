@@ -3,49 +3,20 @@ from twisted.internet.defer import Deferred
 from twisted.web.client import HTTPConnectionPool, Agent
 from twisted.web.server import Site
 from twisted.web.resource import Resource
+import base_req
 
 
 class Drive(Resource):
 
     def __init__(self):
         super().__init__()
-        import requests
-        url = "http://172.16.11.26:8001/api/v29+/auth?name=admin&password=123456"
-        r = requests.get(url)
-        import json
-        j = {}
-        j = json.loads(r.content)
-        self.token = j["token"]
+        self.token = base_req.get_token()
 
     def render_GET(self, request):
         request.setHeader(b"content-type", b"application/json")
-        s.get_token()
-        import requests
-        broadcast_status_list = json.loads("{}")
-        if self.token is not None:
-            url = "http://172.16.11.26:8001/api/v29+/ws/forwarder"
-            body = json.loads("{}")
-            body["company"] = "BL"
-            body["actioncode"] = "c2ls_get_server_terminals_status"
-            body["token"] = self.token
-            body["data"] = ""
-            body["result"] = 200
-            body["return_message"] = ""
-            body["sign"] = "rand string"
-            r1 = requests.put(url, data=body)
-            j1 = None
-            try:
-                j1 = json.loads(r1.content)
-            except json.JSONDecodeError:
-                pass
-            if j1 is not None:
-                points = j1["data"]["EndPointsArray"]
-                for point in points:
-                    item = "BROADCAST" + str(point["EndpointID"])
-                    broadcast_status_list[item] = {}
-                    broadcast_status_list[item]["status"] = points["Status"]
+        id_status = base_req.get_terminal_status(self.token)
         # 终端工作状态 0-离线,1-在线 2-占用
-        return json.dumps(broadcast_status_list).encode("utf-8")
+        return json.dumps(id_status).encode("utf-8")
 
     def render_POST(self, request):
         request.setHeader(b"content-type", b"application/json")
