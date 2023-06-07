@@ -4,6 +4,7 @@ from twisted.web.client import HTTPConnectionPool, Agent
 from twisted.web.server import Site
 from twisted.web.resource import Resource
 import base_req
+import datetime
 
 
 class Drive(Resource):
@@ -11,11 +12,18 @@ class Drive(Resource):
     def __init__(self):
         super().__init__()
         self.token = base_req.get_token()
+        self.init_time = datetime.datetime.now()
 
     def render_GET(self, request):
         request.setHeader(b"content-type", b"application/json")
+
+        # 超过1h，刷新一下token
+        current_time = datetime.datetime.now()
+        time_diff = current_time - self.init_time
+        if time_diff.total_seconds() > 3600:
+            self.token = base_req.refresh_token(self.token)
         id_status = base_req.get_terminal_status(self.token)
-        # 终端工作状态 0-离线,1-在线 2-占用
+
         return json.dumps(id_status).encode("utf-8")
 
     def render_POST(self, request):

@@ -1,9 +1,27 @@
+"""
+
+函数列表：
+- func1: 处理数据的函数1
+- func2: 处理数据的函数2
+
+"""
+
+
 def get_token():
     import requests
     url = "http://172.16.11.26:8001/api/v29+/auth?name=admin&password=123456"
     r = requests.get(url)
     import json
-    j = {}
+    j = json.loads(r.content)
+    return j["token"]
+
+
+def refresh_token(token):
+    import requests
+    url = "http://172.16.11.26:8001/api/v29+/auth/refresh"
+    headers = {'Authorization': token}
+    r = requests.get(url, headers=headers)
+    import json
     j = json.loads(r.content)
     return j["token"]
 
@@ -32,5 +50,6 @@ def get_terminal_status(token):
         for point in points:
             item = "BROADCAST_" + str(point["EndpointID"])
             broadcast_status_list[item] = {}
-            broadcast_status_list[item]["status"] = point["Status"]
+            # 终端工作状态 0-离线,1-在线 2-占用
+            broadcast_status_list[item]["status"] = str(point["Status"])
     return broadcast_status_list
