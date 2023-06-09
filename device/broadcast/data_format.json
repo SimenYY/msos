@@ -1,0 +1,11 @@
+[
+  {
+    "deviceCode": "BROADCAST_3",
+    "content": {
+      "flag": 1,
+      "play_mode": "normal_mode",
+      "volume": 50,
+      "music_id_list": [1,2,3]
+    }
+  }
+]

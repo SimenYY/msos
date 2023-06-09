@@ -13,7 +13,7 @@ class Drive(Resource):
     def __init__(self):
         super().__init__()
         self.token = base_req.get_token()
-        self.init_time = datetime.datetime.now()
+        self.refresh_time = datetime.datetime.now()
         self.task_list = base_req.get_task_status(self.token)
 
     def render_GET(self, request):
@@ -21,9 +21,11 @@ class Drive(Resource):
 
         # 超过1h，刷新一下token
         current_time = datetime.datetime.now()
-        time_diff = current_time - self.init_time
+        time_diff = current_time - self.refresh_time
         if time_diff.total_seconds() > 3600:
             self.token = base_req.refresh_token(self.token)
+            self.refresh_time = current_time
+
         id_status = base_req.get_terminal_status(self.token)
 
         return json.dumps(id_status).encode("utf-8")
@@ -44,6 +46,12 @@ class Drive(Resource):
         :param request:
         :return:
         """
+        current_time = datetime.datetime.now()
+        time_diff = current_time - self.refresh_time
+        if time_diff.total_seconds() > 3600:
+            self.token = base_req.refresh_token(self.token)
+            self.refresh_time = current_time
+
         request.setHeader(b"content-type", b"application/json")
         body = request.content.read()
         devices = None
@@ -63,14 +71,14 @@ class Drive(Resource):
         play_mode = devices[0]["content"]["play_mode"]
         for device in devices:
             endpoints_list.append(int(table[device["deviceCode"]][10:]))
-        if action == 1: # 打开终端
-            ret = base_req.set_mp3_play(self.token, music_list, endpoints_list, volume, play_mode,)
+        if action == 1:  # 打开终端
+            ret = base_req.set_mp3_play(self.token, music_list, endpoints_list, volume, play_mode, )
             if ret["result"] == 200:
                 self.task_list = base_req.get_task_status(self.token)
                 return str(ret).encode('utf-8')
             else:
                 return str(ret).encode('utf-8')
-        elif action == 0:# 关闭终端
+        elif action == 0:  # 关闭终端
             for task in self.task_list:
                 to_close_ep = []
                 for ep in endpoints_list:
@@ -107,7 +115,6 @@ with open('./broadcast.json', 'r') as c:
     config = json.load(c)
 metro_view_port = config["metro_view"]["port"]
 ip_port = config["apps"]["ip_port"]
-
 
 s = SendHelper(agent=agent, ip_port=ip_port)
 
