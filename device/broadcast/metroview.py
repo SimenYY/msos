@@ -1,3 +1,4 @@
+from apps import BroadcastProtocol, SendHelper
 from twisted.internet import reactor
 from twisted.internet.defer import Deferred
 from twisted.web.client import HTTPConnectionPool, Agent
@@ -13,6 +14,7 @@ class Drive(Resource):
         super().__init__()
         self.token = base_req.get_token()
         self.init_time = datetime.datetime.now()
+        self.task_list = base_req.get_task_status(self.token)
 
     def render_GET(self, request):
         request.setHeader(b"content-type", b"application/json")
@@ -27,16 +29,63 @@ class Drive(Resource):
         return json.dumps(id_status).encode("utf-8")
 
     def render_POST(self, request):
+        """
+        [
+          {
+            "deviceCode": "BROADCAST_3",
+            "content": {
+              "flag": 1, //开关标志位，1开启，0关闭
+              "play_mode": "normal_mode", //播放模式，"normal_mode":单次播放;"list_cycle_mode":循环播放
+              "volume": 50, //音量，0-100
+              "music_id_list": [1,2,3] //媒体列表
+            }
+          }
+        ]
+        :param request:
+        :return:
+        """
         request.setHeader(b"content-type", b"application/json")
         body = request.content.read()
-        j = None
+        devices = None
         try:
-            j = json.loads(body)
+            devices = json.loads(body)
         except json.JSONDecodeError:
             pass
-        device = j["device"]
-        tag = j["tag"]
-        value = j["value"]
+
+        # metro-view与广播ID对应表
+        with open("./comparison_table.json", "r") as t:
+            table = json.load(t)
+
+        endpoints_list = []
+        music_list = devices[0]["content"]["music_id_list"]
+        volume = devices[0]["content"]["volume"]
+        action = devices[0]["content"]["flag"]
+        play_mode = devices[0]["content"]["play_mode"]
+        for device in devices:
+            endpoints_list.append(int(table[device["deviceCode"]][10:]))
+        if action == 1: # 打开终端
+            ret = base_req.set_mp3_play(self.token, music_list, endpoints_list, volume, play_mode,)
+            if ret["result"] == 200:
+                self.task_list = base_req.get_task_status(self.token)
+                return str(ret).encode('utf-8')
+            else:
+                return str(ret).encode('utf-8')
+        elif action == 0:# 关闭终端
+            for task in self.task_list:
+                to_close_ep = []
+                for ep in endpoints_list:
+                    for Endpoint in task["EndpointIpList"]:
+                        if ep == Endpoint["EndPointID"]:
+                            to_close_ep.append(ep)
+                if len(to_close_ep) == len(task["EndpointIpList"]):
+                    ret = base_req.stop_task(self.token, task["TaskID"])
+                else:
+                    ret = base_req.remove_endpoints(self.token, task["TaskID"], to_close_ep)
+            if ret["result"] == 200:
+                self.task_list = base_req.get_task_status(self.token)
+                return str(ret).encode('utf-8')
+            else:
+                return str(ret).encode('utf-8')
 
         return b"Hello, this is the control API."
 
@@ -59,7 +108,6 @@ with open('./broadcast.json', 'r') as c:
 metro_view_port = config["metro_view"]["port"]
 ip_port = config["apps"]["ip_port"]
 
-from apps import BroadcastProtocol, SendHelper
 
 s = SendHelper(agent=agent, ip_port=ip_port)
 

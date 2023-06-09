@@ -13,6 +13,7 @@ def get_token():
     r = requests.get(url)
     import json
     j = json.loads(r.content)
+    # print(r.content)
     return j["token"]
 
 
@@ -53,3 +54,103 @@ def get_terminal_status(token):
             # 终端工作状态 0-离线,1-在线 2-占用
             broadcast_status_list[item]["status"] = str(point["Status"])
     return broadcast_status_list
+
+
+def set_mp3_play(token, music_list: list, endpoints_list: list, volume: int, play_mode: str):
+    import json
+    url = "http://172.16.11.26:8001/api/v29+/ws/forwarder"
+
+    body = json.loads("{}")
+    body["company"] = "BL"
+    body["actioncode"] = "c2ls_mobile_terminal_damand_music"
+    body["token"] = token
+    body["data"] = {}
+    body["data"]["EndPointsAdditionalProp"] = ""
+    body["data"]["EndPointIDs"] = endpoints_list
+    body["data"]["EndPointGroupIDs"] = []
+    body["data"]["MusicIDs"] = music_list
+    body["data"]["MusicGroupIDs"] = []
+    from utils import generate_random_31_number
+    num = generate_random_31_number()
+    task_id = "{" + num + "}"
+    body["data"]["TaskID"] = task_id
+    body["data"]["TaskName"] = "音乐_" + num
+    body["data"]["Priority"] = 50
+    body["data"]["Volume"] = volume
+    body["data"]["PlayMode"] = play_mode
+    body["result"] = 200
+    body["return_message"] = ""
+    body["sign"] = "rand string"
+    # print(body)
+    import requests
+    headers = {'Content-Type': "application/json"}
+    # 在传入json数据时，如果使用data参数，需要提交json.dumps之后的字符串,否则结果会出错，requests版本支持json参数，可直接用json参数
+    r = requests.put(url, json=body, headers=headers)
+
+    j = json.loads(r.content.decode('utf-8'))
+
+    return j
+
+def remove_endpoints(token, task_id, to_close_ep):
+    import json
+    url = "http://172.16.11.26:8001/api/v29+/ws/forwarder"
+    body = json.loads("{}")
+    body["company"] = "BL"
+    body["actioncode"] = "c2ls_remove_terminals_from_task"
+    body["token"] = token
+    body["data"] = {}
+    body["data"]["TaskID"] = task_id
+    body["data"]["EndPointsList"] = to_close_ep
+    body["data"]["EndPointsAddditionalProp"] = {}
+    body["result"] = 200
+    body["return_message"] = ""
+    body["sign"] = "rand string"
+
+    import requests
+    headers = {'Content-Type': "application/json"}
+    r = requests.put(url, json=body, headers=headers)
+
+    j = json.loads(r.content.decode('utf-8'))
+
+    return j
+
+def stop_task(token, task_id):
+    import json
+    url = "http://172.16.11.26:8001/api/v29+/ws/forwarder"
+    body = json.loads("{}")
+    body["company"] = "BL"
+    body["actioncode"] = "c2ls_stop_task"
+    body["token"] = token
+    body["data"] = {}
+    body["data"]["TaskID"] = task_id
+    body["result"] = 200
+    body["return_message"] = ""
+    body["sign"] = "rand string"
+
+    import requests
+    headers = {'Content-Type': "application/json"}
+    r = requests.put(url, json=body, headers=headers)
+
+    j = json.loads(r.content.decode('utf-8'))
+
+    return j
+
+
+def get_task_status(token):
+    import json
+    url = "http://172.16.11.26:8001/api/v29+/ws/forwarder"
+    body = json.loads("{}")
+    body["company"] = "BL"
+    body["actioncode"] = "c2ls_get_task_status"
+    body["token"] = token
+    body["data"] = ""
+    body["result"] = 200
+    body["return_message"] = ""
+    body["sign"] = "rand string"
+
+    import requests
+    headers = {'Content-Type': "application/json"}
+    r = requests.put(url, json=body, headers=headers)
+
+    j = json.loads(r.content.decode('utf-8'))
+    return j["data"]["TaskInfoArray"]
