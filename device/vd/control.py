@@ -35,7 +35,7 @@ factory = Site(root)
 pool = HTTPConnectionPool(reactor)
 agent = Agent(reactor, pool=pool)
 
-with open('./phone.json', 'r') as c:
+with open('./vd.json', 'r') as c:
     import json
 
     config = json.load(c)

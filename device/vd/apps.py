@@ -26,7 +26,7 @@ class VehicleProtocol(Protocol):
 
     # 解析函数，提取有用参数
     def parse_data(self, data: bytes):
-        with open('./device/vd/vd.json', 'r') as f:
+        with open('./vd.json', 'r') as f:
             items = json.load(f)
         for item in items:
             # print(item["name"])
