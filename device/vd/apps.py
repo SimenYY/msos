@@ -10,10 +10,11 @@ You can learn to build clients from https://docs.twisted.org/en/stable/core/howt
 """
 
 
+
 class VehicleProtocol(Protocol):
 
     def __init__(self):
-        pass
+        self.vd_msg = {}
 
     def connectionMade(self):
         print("Connected to the server")
@@ -25,14 +26,13 @@ class VehicleProtocol(Protocol):
 
     # 解析函数，提取有用参数
     def parse_data(self, data: bytes):
-        with open('./device/vehicle/vehicle.json', 'r') as f:
+        with open('./device/vd/vd.json', 'r') as f:
             items = json.load(f)
-        vd_msg = {}
         for item in items:
             # print(item["name"])
             value = int.from_bytes(data[item["index"]:item["index"] + item["sizeof"]], byteorder='big')
-            vd_msg[item["name"]] = value
-        print(vd_msg)
+            self.vd_msg[item["name"]] = value
+        print(self.vd_msg)
 
     def connectionLost(self, reason: failure.Failure = connectionDone):
         print("Disconnected from the server!")
