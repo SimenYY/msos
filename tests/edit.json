@@ -1,0 +1,21 @@
+{
+    "vd_1": {
+        "passing_time": "",
+        "line": "",
+        "sum": "",
+        "num_motor": "",
+        "num_small_car": "",
+        "num_big_car": "",
+        "num_truck": "",
+        "num_trailer": "",
+        "average_speed": "",
+        "speed_motor": "",
+        "speed_small_car": "",
+        "speed_big_car": "",
+        "speed_truck": "",
+        "speed_trailer": "",
+        "average_car_spacing": "",
+        "average_car_length": "",
+        "average_occupancy": "",
+    }
+}

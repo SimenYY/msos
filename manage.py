@@ -1,7 +1,7 @@
 from twisted.internet import reactor
 from twisted.python import log
 from twisted.internet.task import LoopingCall
-from device.vehicle.apps import VehicleClientFactory
+from device.vd.apps import VehicleClientFactory
 from device.vms.apps import VMSClientFactory
 from device.phone.apps import PhoneClientFactory
 

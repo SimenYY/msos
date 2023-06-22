@@ -1,0 +1,22 @@
+{
+	"get_endpoint_list": {
+		"body": {
+			"employeeName": "",
+			"deptId": "",
+			"mac": "",
+			"tel": "",
+			"exten": "",
+			"routeId": "",
+			"isRecord": "",
+			"x": "",
+			"y": "",
+			"areaCode": "",
+			"orderList": "1",
+			"modelId": "",
+			"pageLimit": "200",
+			"currPage": "1",
+			"showStatus": "1",
+			"status": ""
+		}
+	}
+}

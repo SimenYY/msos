@@ -1,9 +1,9 @@
 import json
 
 from twisted.internet.protocol import Protocol, ReconnectingClientFactory, connectionDone
-from twisted.internet import reactor, threads
+from twisted.internet import reactor
 from twisted.python import failure
-from common.sansi import check
+from device.vms.common.sansi import check
 
 
 class VMSProtocol(Protocol):
