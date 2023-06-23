@@ -100,7 +100,7 @@ class Drive(Resource):
 
 root = Resource()
 api = Resource()
-# root.getChild(b"api", api).putChild(b"data", Data())
+
 root.putChild(b"api", api)
 api.putChild(b"data", Drive())
 api.putChild(b"control", Drive())

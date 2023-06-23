@@ -91,6 +91,7 @@ def set_mp3_play(token, music_list: list, endpoints_list: list, volume: int, pla
 
     return j
 
+
 def remove_endpoints(token, task_id, to_close_ep):
     import json
     url = "http://172.16.11.26:8001/api/v29+/ws/forwarder"
@@ -113,6 +114,7 @@ def remove_endpoints(token, task_id, to_close_ep):
     j = json.loads(r.content.decode('utf-8'))
 
     return j
+
 
 def stop_task(token, task_id):
     import json
