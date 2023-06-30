@@ -6,6 +6,7 @@ from twisted.web.resource import Resource
 from apps import VehicleClientFactory, VehicleProtocol
 import datetime
 
+
 class Drive(Resource):
 
     def __init__(self):
@@ -17,10 +18,11 @@ class Drive(Resource):
 
         ret = {}
         for vd in vd_list:
-            k = ''.join(["VD", str(vd_list.index(vd)+1)])
+            k = ''.join(["VD", str(vd_list.index(vd) + 1)])
             ret[k] = vd.protocol.vd_msg
 
         return json.dumps(ret).encode('utf-8')
+
     def render_POST(self, request):
         pass
 

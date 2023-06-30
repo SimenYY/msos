@@ -44,7 +44,7 @@ class LightingProtocol(Protocol):
             group_id = 13
         while index < len(data):
             brightness = int.from_bytes(data[index:index + 2], byteorder='big', signed=False)
-            d[''.join(['LIGHTING_', str(group_id)])] = {'status': brightness}
+            d[''.join(['LIGHTING_', str(group_id)])] = {'status': str(brightness)}
             group_id += 1
             index += 12
         print(d)
