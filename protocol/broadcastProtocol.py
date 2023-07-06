@@ -1,5 +1,6 @@
-# coding == utf-8
+from twisted.internet.protocol import Protocol, connectionDone
+from twisted.python import failure
 
-class BroadcastProtocol:
+
+class BroadcastProtocol(Protocol):
     pass
-

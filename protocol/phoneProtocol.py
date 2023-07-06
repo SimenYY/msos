@@ -1,5 +1,6 @@
-from twisted.internet.protocol import Protocol, ReconnectingClientFactory, connectionDone
+from twisted.internet.protocol import Protocol, connectionDone
 from twisted.python import failure
+from twisted.internet import reactor
 
 
 class PhoneProtocol(Protocol):
@@ -13,8 +14,10 @@ class PhoneProtocol(Protocol):
         pass
 
     def dataReceived(self, data: bytes):
+        return reactor.callInThread(self.parse, data)
+
+    def parse(self, data: bytes):
         pass
 
-    class PhoneProtocolFactory(ReconnectingClientFactory):
-        pass
+
 
