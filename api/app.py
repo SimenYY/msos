@@ -5,12 +5,20 @@ app = Flask(__name__)
 
 @app.route('/api/data', methods=['GET'])
 def api_data():
-
+    """
+    查询数据的api，对接metroview的驱动
+    :return:
+    """
+    
     return 200
 
 
 @app.route('/api/control', methods=['POST'])
 def api_control():
+    """
+    下发控制的api
+    :return:
+    """
 
     return 200
 
