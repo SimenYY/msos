@@ -6,5 +6,5 @@ from factory.deviceFactory import DeviceFactory
 from protocol import *
 
 
-class BroadcastFactory(DeviceFactory, ReconnectingClientFactory):
+class BroadcastFactory(DeviceFactory):
     protocol = BroadcastProtocol

@@ -3,6 +3,7 @@
 from flask import Flask
 from flask_twisted import Twisted
 from twisted.internet import reactor
+from twisted.internet.protocol import ReconnectingClientFactory
 
 from data.value import value_dic
 
@@ -33,6 +34,10 @@ def main():
             protocol_type = factory['protocol_type']
             port = factory['port']
             if 'TCP' == protocol_type:
+                bases = []
+                bases.append(ReconnectingClientFactory)
+                # 动态混入
+                f.__bases__ += tuple(bases)
                 for ip in ip_list:
                     reactor.connectTCP(ip, port, f())
             elif 'HTTP' == protocol_type:

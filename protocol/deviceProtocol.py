@@ -13,18 +13,13 @@ class DeviceProtocol(Protocol):
     def dataReceived(self, data: bytes):
         reactor.callInThread(self.dataParse, data)
 
-    def heart_beat(self):
+    def dataParse(self, data: bytes):
         """
-        心跳指令，如果协议支持，则用户需要重写
+        负责目标数据的解析工作
+        :param data:
         :return:
         """
         pass
-
-    def dataParse(self, data: bytes):
-        pass
-
-    def connectionMade(self):
-        reactor.callInThread(self.heart_beat)
 
 
 class Interval:
@@ -32,6 +27,7 @@ class Interval:
     用类的形式定义的通信间隔装饰器，参数输入标准参照方便用户观察的形式，
     例如‘1/second、3/minute、5/hour’的形式来定义
     """
+
     def __init__(self, value: str):
         value = value.split('/')
         unit = value[1]
