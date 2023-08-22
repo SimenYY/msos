@@ -1,14 +1,19 @@
 # -*- coding: utf-8 -*-
 
-from flask import Flask
+from flask import Flask, request
 from flask_twisted import Twisted
 from twisted.internet import reactor
 from twisted.internet.protocol import ReconnectingClientFactory
 
 from data.value import value_dic
 
+from loguru import logger
+
 app = Flask(__name__)
 twisted = Twisted(app)
+
+# 接口列表
+instance_list = {}
 
 
 @app.route('/api/data', methods=['GET'])
@@ -18,21 +23,44 @@ def api_data():
 
 @app.route('/api/control', methods=['POST'])
 def api_control():
-    pass
+    try:
+        device_list = request.get_json()
+    except ValueError as e:
+        logger.error('The request data is not in JSON format: {}', e)
+        ret = {}
+        ret['data'] = {}
+        ret['data']['message'] = 'ValueError'
+        ret['data']['resultCode'] = 0
+        ret['status'] = 'error'
+        return ret
+
+    device_code_list = []
+    for device in device_list:
+        device_code = device.get('deviceCode')
+        if device_code is not None:
+            device_code_list.append(device_code)
+    content = device.get('content')
+    # 拆分成‘对象’+‘逻辑’，然后作为入参
+    if not device_code_list and content is not None:
+        #todo 回调设备类的处理函数
+        pass
+
 
 
 def main():
-    from config import config
     from factory.deviceFactory import DeviceFactory
-    factory_list = config['factory_list']
-    for factory in factory_list:
-        if factory['is_enable']:
-            # 通过反射返回继承了设备工厂的子工厂
-            device_name = factory['device_name'].lower().capitalize()
+    from config import config
+    device_list = config['device_list']
+    for device in device_list:
+        if device['is_enable']:
+            device_name = device['device_name'].lower().capitalize()
+            # 构建设备类
             f = DeviceFactory.buildSubFactory(device_name)
-            ip_list = factory['ip_list']
-            protocol_type = factory['protocol_type']
-            port = factory['port']
+            # 建立对应表
+            instance_list[device_name] = f
+            ip_list = device['ip_list']
+            protocol_type = device['protocol_type']
+            port = device['port']
             if 'TCP' == protocol_type:
                 bases = []
                 bases.append(ReconnectingClientFactory)

@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 from protocol.deviceProtocol import DeviceProtocol, Interval
-from data.value import value_dic
+
 
 
 class BroadcastProtocol(DeviceProtocol):
@@ -9,14 +9,17 @@ class BroadcastProtocol(DeviceProtocol):
         super().dataReceived(data)
 
     def dataParse(self, data: bytes):
+        from loguru import logger
+        logger.info(data)
         pass
 
-    @Interval('1/second')
-    def heart_beat(self):
-        pass
+    @Interval('2/second')
+    def send(self):
+        data = b'1'
+        self.transport.write(data)
 
     def connectionMade(self):
-        print(self.transport.getPeer())
-
+        from twisted.internet import reactor
+        reactor.callInThread(self.send)
 
 

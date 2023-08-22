@@ -46,3 +46,4 @@ class Interval:
                 time.sleep(self.seconds)
 
         return wrapper
+
