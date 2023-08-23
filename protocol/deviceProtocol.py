@@ -47,3 +47,9 @@ class Interval:
 
         return wrapper
 
+
+def web_client(cls):
+    cls.remote_host = None
+    cls.remote_port = None
+    return cls
+

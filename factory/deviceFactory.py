@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
-
-from twisted.internet.protocol import Factory
+from twisted.internet.interfaces import IAddress
+from twisted.internet.protocol import Factory, Protocol
+from typing import Optional
 from factory import *
-from protocol import *
 
 
 class DeviceFactory(Factory):
@@ -10,7 +10,7 @@ class DeviceFactory(Factory):
     设备工厂抽象类，用于项目适配的自定义工厂类, 默认继承原始Factory，后续扩展可动态继承父类
     """
     # 一个实例对应一个ip地址, 在buildProtocol中进行统计
-    instances = []
+    instances = None
 
     @classmethod
     def buildSubFactory(cls, assembly_name):
@@ -27,3 +27,9 @@ class DeviceFactory(Factory):
             return dic[factory_name]
         else:
             return None
+
+    def buildProtocol(self, addr: IAddress) -> "Optional[Protocol]":
+        p = self.protocol()
+        p.factory = self
+        self.instances.append(p)
+        return p

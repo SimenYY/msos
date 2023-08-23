@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+import time
 
 from flask import Flask, request
 from flask_twisted import Twisted
@@ -12,8 +13,8 @@ from loguru import logger
 app = Flask(__name__)
 twisted = Twisted(app)
 
-# 接口列表
-instance_list = {}
+# 设备名与对应工厂类
+class_list = {}
 
 
 @app.route('/api/data', methods=['GET'])
@@ -23,28 +24,44 @@ def api_data():
 
 @app.route('/api/control', methods=['POST'])
 def api_control():
+    ret = {}
+    ret['data'] = {}
+    # json格式校验
     try:
         device_list = request.get_json()
     except ValueError as e:
         logger.error('The request data is not in JSON format: {}', e)
-        ret = {}
-        ret['data'] = {}
         ret['data']['message'] = 'ValueError'
-        ret['data']['resultCode'] = 0
+        ret['data']['resultCode'] = 1
         ret['status'] = 'error'
         return ret
 
+    # 建立device_code_list和提取content
     device_code_list = []
     for device in device_list:
         device_code = device.get('deviceCode')
         if device_code is not None:
             device_code_list.append(device_code)
     content = device.get('content')
-    # 拆分成‘对象’+‘逻辑’，然后作为入参
-    if not device_code_list and content is not None:
-        #todo 回调设备类的处理函数
-        pass
 
+    # 拆分成‘对象’+‘逻辑’，然后作为该设备类的执行函数的入参
+    if device_code_list and content:
+        device_name = device_code_list[0].split('_')[0].lower().capitalize()
+        f = class_list[device_name]
+        for instance in f.instances:
+            # todo 异步执行设备控制动作，或者考虑多线程
+            instance.execute(device_code_list, content)
+    else:
+        logger.error('Incorrect json parameter')
+        ret['data']['message'] = 'Incorrect json parameter'
+        ret['data']['resultCode'] = 1
+        ret['status'] = 'error'
+        return ret
+
+    ret['data']['message'] = 'Control success'
+    ret['data']['resultCode'] = 0
+    ret['status'] = 'success'
+    return ret
 
 
 def main():
@@ -57,7 +74,7 @@ def main():
             # 构建设备类
             f = DeviceFactory.buildSubFactory(device_name)
             # 建立对应表
-            instance_list[device_name] = f
+            class_list[device_name] = f
             ip_list = device['ip_list']
             protocol_type = device['protocol_type']
             port = device['port']
@@ -69,7 +86,15 @@ def main():
                 for ip in ip_list:
                     reactor.connectTCP(ip, port, f())
             elif 'HTTP' == protocol_type:
-                pass
+                # 初始化web远程ip和port
+                factory_instance = f()
+                from twisted.internet.address import IPv4Address
+                factory_instance.buildProtocol(IPv4Address(
+                    type='TCP',
+                    host=device['ip_list'][0],
+                    port=device['port']
+                ))
+
             elif 'UDP' == protocol_type:
                 pass
 

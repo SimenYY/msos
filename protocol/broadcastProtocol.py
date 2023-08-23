@@ -3,7 +3,6 @@
 from protocol.deviceProtocol import DeviceProtocol, Interval
 
 
-
 class BroadcastProtocol(DeviceProtocol):
     def dataReceived(self, data: bytes):
         super().dataReceived(data)
@@ -21,5 +20,3 @@ class BroadcastProtocol(DeviceProtocol):
     def connectionMade(self):
         from twisted.internet import reactor
         reactor.callInThread(self.send)
-
-
