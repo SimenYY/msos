@@ -9,8 +9,9 @@ class DeviceFactory(Factory):
     """
     设备工厂抽象类，用于项目适配的自定义工厂类, 默认继承原始Factory，后续扩展可动态继承父类
     """
-    # 一个实例对应一个ip地址, 在buildProtocol中进行统计
-    instances = None
+
+    def __init__(self, protocol):
+        self.protocol = protocol
 
     @classmethod
     def buildSubFactory(cls, assembly_name):
@@ -27,9 +28,3 @@ class DeviceFactory(Factory):
             return dic[factory_name]
         else:
             return None
-
-    def buildProtocol(self, addr: IAddress) -> "Optional[Protocol]":
-        p = self.protocol()
-        p.factory = self
-        self.instances.append(p)
-        return p

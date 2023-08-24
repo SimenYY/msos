@@ -8,6 +8,5 @@ from protocol import *
 
 
 class BroadcastFactory(DeviceFactory):
-    protocol = BroadcastProtocol
     instances = []
 

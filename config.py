@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+from protocol import *
 
 config = {
     'app': {
@@ -10,7 +11,7 @@ config = {
         {
             'device_name': 'broadcast',
             'protocol_type': 'TCP',
-            'is_enable': True,
+            'is_enable': False,
             'ip_list': [
                 '127.0.0.1',
             ],
@@ -19,11 +20,21 @@ config = {
         {
             'device_name': 'Phone',
             'protocol_type': 'HTTP',
-            'is_enable': True,
+            'is_enable': False,
             'ip_list': [
                 '127.0.0.1'
             ],
             'port': 5500
+        },
+        {
+            'device_name': 'Antenna',
+            'protocol_type': 'HTTP',
+            'protocol_name': AntennaProtocol,
+            'is_enable': True,
+            'ip_list': [
+                '127.0.0.1'
+            ],
+            'port': 5000
         }
     ]
 }

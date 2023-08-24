@@ -1,5 +1,4 @@
 # -*- coding: utf-8 -*-
-
 from protocol.deviceProtocol import DeviceProtocol, Interval
 
 

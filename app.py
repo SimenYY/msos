@@ -68,26 +68,34 @@ def main():
     from factory.deviceFactory import DeviceFactory
     from config import config
     device_list = config['device_list']
+
     for device in device_list:
         if device['is_enable']:
+
+            # 设备名大小写不敏感
             device_name = device['device_name'].lower().capitalize()
-            # 构建设备类
-            f = DeviceFactory.buildSubFactory(device_name)
-            # 建立对应表
-            class_list[device_name] = f
-            ip_list = device['ip_list']
+            protocol_name = device['protocol_name']
             protocol_type = device['protocol_type']
             port = device['port']
+            ip_list = device['ip_list']
+
+            # 构建设备类
+            f = DeviceFactory.buildSubFactory(device_name)
+            # 建立”设备名-设备工厂类“对应表
+            class_list[device_name] = f
+
             if 'TCP' == protocol_type:
                 bases = []
                 bases.append(ReconnectingClientFactory)
                 # 动态混入
                 f.__bases__ += tuple(bases)
+
                 for ip in ip_list:
-                    reactor.connectTCP(ip, port, f())
+                    reactor.connectTCP(ip, port, f(protocol_name))
+
             elif 'HTTP' == protocol_type:
                 # 初始化web远程ip和port
-                factory_instance = f()
+                factory_instance = f(protocol_name)
                 from twisted.internet.address import IPv4Address
                 factory_instance.buildProtocol(IPv4Address(
                     type='TCP',

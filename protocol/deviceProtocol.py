@@ -2,7 +2,6 @@
 
 from twisted.internet.protocol import Protocol
 from twisted.internet import reactor
-from twisted.internet import reactor
 
 import time
 from functools import wraps
@@ -51,5 +50,6 @@ class Interval:
 def web_client(cls):
     cls.remote_host = None
     cls.remote_port = None
+
     return cls
 
