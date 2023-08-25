@@ -18,17 +18,8 @@ config = {
             'port': 502
         },
         {
-            'device_name': 'Phone',
-            'protocol_type': 'HTTP',
-            'is_enable': False,
-            'ip_list': [
-                '127.0.0.1'
-            ],
-            'port': 5500
-        },
-        {
             'device_name': 'Antenna',
-            'protocol_type': 'HTTP',
+            'protocol_type': 'HTTPS',
             'protocol_name': AntennaProtocol,
             'is_enable': True,
             'ip_list': [

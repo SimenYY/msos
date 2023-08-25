@@ -1,7 +1,5 @@
 # -*- coding: utf-8 -*-
-from twisted.internet.interfaces import IAddress
-from twisted.internet.protocol import Factory, Protocol
-from typing import Optional
+from twisted.internet.protocol import Factory
 from factory import *
 
 

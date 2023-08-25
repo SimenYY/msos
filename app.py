@@ -10,6 +10,8 @@ from data.value import value_dic
 
 from loguru import logger
 
+logger.add('logs\\app_{time}.log', rotation='00:00', retention='15 days')
+
 app = Flask(__name__)
 twisted = Twisted(app)
 
@@ -49,7 +51,7 @@ def api_control():
         device_name = device_code_list[0].split('_')[0].lower().capitalize()
         f = class_list[device_name]
         for instance in f.instances:
-            # todo 异步执行设备控制动作，或者考虑多线程
+            # todo 控制这边性能要求不高，可同步进行
             instance.execute(device_code_list, content)
     else:
         logger.error('Incorrect json parameter')
@@ -62,6 +64,27 @@ def api_control():
     ret['data']['resultCode'] = 0
     ret['status'] = 'success'
     return ret
+
+
+@app.route('/http/device.htm', methods=['POST'])
+def camera_data():
+    """
+    @description: 小黄人设备作为http client主动上传数据
+    :return:
+    """
+    try:
+        ret = request.get_json()
+    except ValueError as e:
+        logger.error('The request data is not in JSON format: {}', e)
+    else:
+        params = ret.get('params')
+        if params is not None:
+            guid = params.get('guid')
+            uploadTime = params.get('uploadTime')
+            captureTime = params.get('captureTime')
+            deviceCode = params.get('deviceCode')
+            deviceIP = params.get('deviceIP')
+            # todo 相机接口暂时放一下
 
 
 def main():
@@ -93,11 +116,12 @@ def main():
                 for ip in ip_list:
                     reactor.connectTCP(ip, port, f(protocol_name))
 
-            elif 'HTTP' == protocol_type:
+            elif 'HTTP' == protocol_type or 'HTTPS' == protocol_type:
                 # 初始化web远程ip和port
                 factory_instance = f(protocol_name)
                 from twisted.internet.address import IPv4Address
                 factory_instance.buildProtocol(IPv4Address(
+                    # type内置类型不包括http\https
                     type='TCP',
                     host=device['ip_list'][0],
                     port=device['port']
@@ -109,7 +133,6 @@ def main():
     ip = config['app'].get('ip', '0.0.0.0')
     port = config['app'].get('port', 28889)
     debug = config['app'].get('is_debug', False)
-
     twisted.run(ip=ip, port=port, debug=debug)
 
 
