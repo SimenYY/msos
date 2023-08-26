@@ -6,6 +6,12 @@ from typing import Optional
 from factory.deviceFactory import DeviceFactory
 
 
-class BroadcastFactory(DeviceFactory):
+class SmartFactory(DeviceFactory):
     instances = []
+
+    def buildProtocol(self, addr: IAddress) -> "Optional[Protocol]":
+        p = self.protocol()
+        p.factory = self
+        self.instances.append(p)
+        return p
 
