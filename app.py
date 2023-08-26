@@ -1,16 +1,13 @@
 # -*- coding: utf-8 -*-
-import time
+import sys
 
 from flask import Flask, request
 from flask_twisted import Twisted
+from loguru import logger
 from twisted.internet import reactor
 from twisted.internet.protocol import ReconnectingClientFactory
 
 from data.value import value_dic
-
-from loguru import logger
-
-logger.add('logs\\app_{time}.log', rotation='00:00', retention='15 days')
 
 app = Flask(__name__)
 twisted = Twisted(app)
@@ -92,6 +89,12 @@ def main():
     from config import config
     device_list = config['device_list']
 
+    level = config['log'].get('level', 'ERROR').upper()
+    rotation = config['log'].get('rotation', 'rotation')
+    retention = config['log'].get('retention', '15 days')
+
+    logger.add('logs\\app_{time}.log', rotation=rotation, retention=retention, level=level)
+    # logger.add(sys.stderr, level='ERROR')
     for device in device_list:
         if device['is_enable']:
 
@@ -120,13 +123,13 @@ def main():
                 # 初始化web远程ip和port
                 factory_instance = f(protocol_name)
                 from twisted.internet.address import IPv4Address
-                factory_instance.buildProtocol(IPv4Address(
-                    # type内置类型不包括http\https
-                    type='TCP',
-                    host=device['ip_list'][0],
-                    port=device['port']
-                ))
-
+                for ip in ip_list:
+                    factory_instance.buildProtocol(IPv4Address(
+                        type='TCP',  # type内置类型不包括http\https
+                        host=ip,
+                        port=port
+                    ))
+                    logger.info(f"实例化http\https接口，接口协议为:{protocol_name.__name__}, 远程ip:{ip}")
             elif 'UDP' == protocol_type:
                 pass
 

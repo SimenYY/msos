@@ -16,6 +16,7 @@ from twisted.internet import reactor
 from data.value import value_dic
 from protocol.deviceProtocol import DeviceProtocol, web_client, Interval
 
+
 @web_client
 class AntennaProtocol(DeviceProtocol):
     """
@@ -32,17 +33,17 @@ class AntennaProtocol(DeviceProtocol):
         功能：获取天线设备信息和状态信息
         :return:
         """
-        # url = []
-        # url.append('https://')
-        # url.append(self.remote_host)
-        # url.append('/cgi-bin/rsuinfo')
-        # url = ''.join(url)
-
         url = []
-        url.append('http://')
-        url.append('127.0.0.1:5000')
-        url.append('/cgi-bin/rsuinfo')
-        url = ''.join(url)
+        if self.remote_host == '127.0.0.1':
+            url.append('http://')
+            url.append('127.0.0.1:5000')
+            url.append('/cgi-bin/rsuinfo')
+            url = ''.join(url)
+        else:
+            url.append('https://')
+            url.append(self.remote_host)
+            url.append('/cgi-bin/rsuinfo')
+            url = ''.join(url)
 
         try:
             ret = requests.get(url)

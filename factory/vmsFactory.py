@@ -14,3 +14,4 @@ class VmsFactory(DeviceFactory):
         p.factory = self
         self.instances.append(p)
         return p
+
