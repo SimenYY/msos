@@ -20,6 +20,9 @@ class DeviceProtocol(Protocol):
         """
         pass
 
+    def heart_beat(self):
+        pass
+
 
 class Interval:
     """
