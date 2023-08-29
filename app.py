@@ -70,27 +70,6 @@ def api_control():
     return ret
 
 
-@app.route('/http/device.htm', methods=['POST'])
-def camera_data():
-    """
-    @description: 小黄人设备作为http client主动上传数据
-    :return:
-    """
-    try:
-        ret = request.get_json()
-    except ValueError as e:
-        logger.error('The request data is not in JSON format: {}', e)
-    else:
-        params = ret.get('params')
-        if params is not None:
-            guid = params.get('guid')
-            uploadTime = params.get('uploadTime')
-            captureTime = params.get('captureTime')
-            deviceCode = params.get('deviceCode')
-            deviceIP = params.get('deviceIP')
-            # todo 相机接口暂时放一下
-
-
 def main():
     from factory.deviceFactory import DeviceFactory
     from config import config
@@ -100,7 +79,8 @@ def main():
     rotation = config['log'].get('rotation', 'rotation')
     retention = config['log'].get('retention', '15 days')
 
-    logger.add('logs\\app_{time}.log', rotation=rotation, retention=retention, level=level)
+    logger.remove(handler_id=None)
+    log_file = logger.add('logs\\msos_{time}.log', rotation=rotation, retention=retention, level=level)
     # logger.add(sys.stderr, level='ERROR')
     for device in device_list:
         if device['is_enable']:

@@ -21,27 +21,37 @@ from data.value import value_dic
 
 
 class YoujiProtocol(DeviceProtocol):
+
+    def __init__(self):
+        self.buffer = b''
+
     def connectionMade(self):
-        logger.info(f'连接到主机:{self.transport.getPeer().host} {self.transport.getPeer().port}')
+        logger.info(f'连接到主机:{self.transport.getPeer().host}:{self.transport.getPeer().port}')
         self.login_ack()
         reactor.callInThread(self.heart_beat)
         # self.query_all_device_data()
 
     def dataReceived(self, data: bytes):
-        logger.info(f'收到数据来自{self.transport.getPeer().host}:{data}')
-        super().dataReceived(data)
+        logger.info(f'收到数据来自{self.transport.getPeer().host}:{data.decode("GB18030")}')
+        if data[len(data) - 1:] != b'\x00':
+            self.buffer += data
+        else:
+            self.buffer += data
+            reactor.callInThread(self.dataParse, self.buffer)
+            self.buffer = b''
 
     def connectionLost(self, reason: failure.Failure = connectionDone):
         logger.error(reason)
 
     def dataParse(self, data: bytes):
+
         str_data = data.decode('GB18030')
         smart = {}
         str_data = str_data[:-1]
         try:
             j = json.loads(str_data)
         except ValueError as e:
-            logger.error(f"数据不满足JSON格式:{e}")
+            logger.error(f"数据不满足JSON格式:{e}, data = {str_data}")
             return
         else:
             MSG = j.get('MSG')
@@ -112,7 +122,7 @@ class YoujiProtocol(DeviceProtocol):
         self.transport.write(str.encode('GB18030'))
         logger.info(f'发送数据到往{self.transport.getPeer().host}:{str.encode("GB18030")}')
 
-    @DeviceProtocol.interval('3/second')
+    @DeviceProtocol.interval('25/second')
     def heart_beat(self):
         j = {}
         j['MSG'] = 0

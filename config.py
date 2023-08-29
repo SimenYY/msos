@@ -20,7 +20,7 @@ config = {
     'log': {
         'level': 'info',
         'rotation': '00:00',
-        'retention': '15 days'
+        'retention': '3 days'
     },
     'device_list': [
         {
@@ -30,7 +30,7 @@ config = {
             'protocol_name': AntennaProtocol,
             'is_enable': False,
             'ip_list': [
-                '127.0.0.1',
+                # '127.0.0.1',
                 # '172.20.61.125'
             ],
             'port': 5000
@@ -42,7 +42,12 @@ config = {
             'protocol_name': YoujiProtocol,
             'is_enable': True,
             'ip_list': [
-                '127.0.0.1'
+                # '127.0.0.1'
+                '192.168.3.24',
+                # '192.168.3.27', # 无owners
+                # '192.168.3.28', # 无owners
+                # '192.168.3.29', # 无owners
+                # '192.168.3.31'  # 无owners
             ],
             'port': 31517
         }
