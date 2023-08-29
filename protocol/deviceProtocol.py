@@ -21,24 +21,39 @@ class DeviceProtocol(Protocol):
     def dataReceived(self, data: bytes):
         reactor.callInThread(self.dataParse, data)
 
-    def dataParse(self, data: bytes) -> None:
+    def dataParse(self, data: bytes):
         """
+        数据解析
         @param data:
         @return:
         """
         pass
 
-    def heart_beat(self) -> None:
+    def heart_beat(self):
+        """
+        心跳
+        @return:
+        """
         pass
 
     @staticmethod
-    def web_client(cls):
+    def http_client(cls):
+        """
+        增加http client相关的变量与方法
+        @param cls:
+        @return:
+        """
         cls.remote_host = None
         cls.remote_port = None
         return cls
 
     @staticmethod
     def interval(value: str):
+        """
+        用于间隔通信的装饰器
+        @param value:
+        @return:
+        """
         value = value.split('/')
         unit = value[1]
         if 'second' == unit:

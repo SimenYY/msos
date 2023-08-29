@@ -18,11 +18,13 @@ from data.value import value_dic
 from protocol.deviceProtocol import DeviceProtocol
 
 
-@DeviceProtocol.web_client
+@DeviceProtocol.http_client
 class AntennaProtocol(DeviceProtocol):
     """
-    @项目名称：镜湖收费站
-    @项目协议：https://alidocs.dingtalk.com/i/nodes/20eMKjyp81R7ePKGfwQ0w1xwWxAZB1Gv?utm_scene=person_space
+    @projectName: 镜湖收费站
+    @projectFile: https://alidocs.dingtalk.com/i/nodes/20eMKjyp81R7ePKGfwQ0w1xwWxAZB1Gv?utm_scene=person_space
+    @protocolName: 镜湖收费站天线协议
+    @description:
     """
 
     def __init__(self):

@@ -131,12 +131,11 @@ def main():
                 factory_instance = f(protocol_name)
                 from twisted.internet.address import IPv4Address
                 for ip in ip_list:
-                    p = factory_instance.buildProtocol(IPv4Address(
+                    factory_instance.buildProtocol(IPv4Address(
                         type='TCP',  # type内置类型不包括http\https
                         host=ip,
                         port=port
                     ))
-                    # 调用__call__
                     logger.info(f"实例化http\https接口，接口协议为:{protocol_name.__name__}, 远程ip:{ip}")
             elif 'UDP' == protocol_type:
                 pass
