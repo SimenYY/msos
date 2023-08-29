@@ -1,5 +1,13 @@
+#!/usr/bin/env python
 # -*- coding: utf-8 -*-
-import sys
+"""
+@FileName：app.py
+@Description：主文件，负责api接口，以及相应连接、配置初始化
+@Author：SimenYY
+@Time：2023/8/28 14:53
+@Department：公路机电工程技术中心
+@Copyright：©1999-2023 浙江中控信息产业股份有限公司
+"""
 
 from flask import Flask, request
 from flask_twisted import Twisted
@@ -12,7 +20,7 @@ from data.value import value_dic
 app = Flask(__name__)
 twisted = Twisted(app)
 
-# 设备名与对应工厂类
+# K:设备名字符串，V:对应工厂类
 class_list = {}
 
 
@@ -25,7 +33,6 @@ def api_data():
 def api_control():
     ret = {}
     ret['data'] = {}
-    # json格式校验
     try:
         device_list = request.get_json()
     except ValueError as e:
@@ -124,11 +131,12 @@ def main():
                 factory_instance = f(protocol_name)
                 from twisted.internet.address import IPv4Address
                 for ip in ip_list:
-                    factory_instance.buildProtocol(IPv4Address(
+                    p = factory_instance.buildProtocol(IPv4Address(
                         type='TCP',  # type内置类型不包括http\https
                         host=ip,
                         port=port
                     ))
+                    # 调用__call__
                     logger.info(f"实例化http\https接口，接口协议为:{protocol_name.__name__}, 远程ip:{ip}")
             elif 'UDP' == protocol_type:
                 pass

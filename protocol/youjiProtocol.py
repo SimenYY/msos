@@ -1,4 +1,14 @@
+#!/usr/bin/env python
 # -*- coding: utf-8 -*-
+"""
+@FileNameï¼šyoujiProtocol.py
+@Descriptionï¼š
+@Authorï¼šSimenYY
+@Timeï¼š2023/8/28 14:53
+@Departmentï¼šå…¬è·¯æœºç”µå·¥ç¨‹æŠ€æœ¯ä¸­å¿ƒ
+@Copyrightï¼šÂ©1999-2023 æµ™æ±Ÿä¸­æ§ä¿¡æ¯äº§ä¸šè‚¡ä»½æœ‰é™å…¬å¸
+"""
+
 import json
 
 from loguru import logger
@@ -6,32 +16,32 @@ from twisted.internet.protocol import connectionDone
 from twisted.internet import reactor
 from twisted.python import failure
 
-from protocol.deviceProtocol import DeviceProtocol, Interval
-
+from protocol.deviceProtocol import DeviceProtocol
 from data.value import value_dic
 
 
 class YoujiProtocol(DeviceProtocol):
     def connectionMade(self):
-        logger.info(f'Á¬½Óµ½Ö÷»ú:{self.transport.getPeer().host} {self.transport.getPeer().port}')
+        logger.info(f'è¿æ¥åˆ°ä¸»æœº:{self.transport.getPeer().host} {self.transport.getPeer().port}')
         self.login_ack()
         reactor.callInThread(self.heart_beat)
-        #self.query_all_device_data()
+        # self.query_all_device_data()
 
     def dataReceived(self, data: bytes):
-        logger.info(f'ÊÕµ½Êı¾İÀ´×Ô{self.transport.getPeer().host}:{data}')
+        logger.info(f'æ”¶åˆ°æ•°æ®æ¥è‡ª{self.transport.getPeer().host}:{data}')
         super().dataReceived(data)
 
     def connectionLost(self, reason: failure.Failure = connectionDone):
         logger.error(reason)
 
     def dataParse(self, data: bytes):
-        str = data.decode('GB18030')
-        str = str[:-1]
+        str_data = data.decode('GB18030')
+        smart = {}
+        str_data = str_data[:-1]
         try:
-            j = json.loads(str)
+            j = json.loads(str_data)
         except ValueError as e:
-            logger.error(f"Êı¾İ²»Âú×ãJSON¸ñÊ½:{e}")
+            logger.error(f"æ•°æ®ä¸æ»¡è¶³JSONæ ¼å¼:{e}")
             return
         else:
             MSG = j.get('MSG')
@@ -39,7 +49,7 @@ class YoujiProtocol(DeviceProtocol):
                 return
             rt_spm = j.get('rt_spm')
 
-            # ÓĞÏßÖ÷ÍøÅäÖÃ
+            # æœ‰çº¿ä¸»ç½‘é…ç½®
             rj45_sig = rt_spm.get('rj45').get('sig')
             rj45_dhcp = rt_spm.get('rj45').get('dhcp')
             rj45_ip = rt_spm.get('rj45').get('ip')
@@ -51,7 +61,7 @@ class YoujiProtocol(DeviceProtocol):
             rj45_port = rt_spm.get('rj45').get('port')
             rj45_hosts = rt_spm.get('rj45').get('hosts')
             rj45_ips = rt_spm.get('rj45').get('ips')
-            # ÓĞÏßÖ÷Íø×´Ì¬
+            # æœ‰çº¿ä¸»ç½‘çŠ¶æ€
             rt_rj45_step = rt_spm.get('rt_rj45').get('step')
             rt_rj45_ip = rt_spm.get('rt_rj45').get('ip')
             rt_rj45_close = rt_spm.get('rt_rj45').get('close')
@@ -60,7 +70,7 @@ class YoujiProtocol(DeviceProtocol):
             rt_rj45_port = rt_spm.get('rt_rj45').get('port')
             rt_rj45_hosts = rt_spm.get('rt_rj45').get('hosts')
             rt_rj45_mac = rt_spm.get('rt_rj45').get('mac')
-            # ÓĞÏß±¸ÍøÅäÖÃ
+            # æœ‰çº¿å¤‡ç½‘é…ç½®
             rj45r_sig = rt_spm.get('rj45r').get('sig')
             rj45r_dhcp = rt_spm.get('rj45r').get('dhcp')
             rj45r_ip = rt_spm.get('rj45r').get('ip')
@@ -72,7 +82,7 @@ class YoujiProtocol(DeviceProtocol):
             rj45r_port = rt_spm.get('rj45r').get('port')
             rj45r_hosts = rt_spm.get('rj45r').get('hosts')
             rj45r_ips = rt_spm.get('rj45r').get('ips')
-            # ÓĞÏß±¸Íø×´Ì¬
+            # æœ‰çº¿å¤‡ç½‘çŠ¶æ€
             rt_rj45r_step = rt_spm.get('rt_rj45r').get('step')
             rt_rj45r_ip = rt_spm.get('rt_rj45r').get('ip')
             rt_rj45r_close = rt_spm.get('rt_rj45r').get('close')
@@ -81,7 +91,7 @@ class YoujiProtocol(DeviceProtocol):
             rt_rj45r_port = rt_spm.get('rt_rj45r').get('port')
             rt_rj45r_hosts = rt_spm.get('rt_rj45r').get('hosts')
             rt_rj45r_mac = rt_spm.get('rt_rj45r').get('mac')
-            # ¹©µç×´Ì¬
+            # ä¾›ç”µçŠ¶æ€
             rt_power_ac = rt_spm.get('rt_power').get('ac')
             rt_power_dc = rt_spm.get('rt_power').get('dc')
             rt_power_by = rt_spm.get('rt_power').get('by')
@@ -91,7 +101,35 @@ class YoujiProtocol(DeviceProtocol):
             rt_power_volac = rt_spm.get('rt_power').get('volac')
             rt_power_volups = rt_spm.get('rt_power').get('volups')
 
-            smart = {}
+            # å¤–æ¥è®¾å¤‡
+            owners = rt_spm.get('owners')
+            for owner in owners:
+                name = owner.get('name')
+                if 'èŠ‚ç‚¹æœº' == name:
+                    device_name = 'JieDianJi'
+                elif 'æ æ†æœº' == name:
+                    device_name = 'LanGanJi'
+                elif 'å‰æŠ“æ‹ç›¸æœº' == name:
+                    device_name = 'QianZhuaPaiXiangJi'
+                elif 'æŠ˜å å±' == name:
+                    device_name = 'ZheDiePing'
+
+                binds = owner.get('binds')
+                for bind in binds:
+                    values = bind.get('values')
+                    for value in values:
+                        value_name = value.get('name')
+                        v = value.get('value')
+                        num_type = v[:1]
+                        num = v[1:]
+                        if 'b' == num_type:
+                            v = bool(num)
+                        elif 'i' == num_type:
+                            v = int(num)
+                        elif 'f' == num_type:
+                            v = float(num)
+                        smart[''.join([device_name, '_', value_name])] = v
+
             smart['rj45_sig'] = rj45_sig
             smart['rj45_dhcp'] = rj45_dhcp
             smart['rj45_ip'] = rj45_ip
@@ -151,9 +189,9 @@ class YoujiProtocol(DeviceProtocol):
         j['time'] = int(time.time())
         str = json.dumps(j) + '\0'
         self.transport.write(str.encode('GB18030'))
-        logger.info(f'·¢ËÍÊı¾İµ½Íù{self.transport.getPeer().host}:{str.encode("GB18030")}')
+        logger.info(f'å‘é€æ•°æ®åˆ°å¾€{self.transport.getPeer().host}:{str.encode("GB18030")}')
 
-    @Interval('3/second')
+    @DeviceProtocol.interval('3/second')
     def heart_beat(self):
         j = {}
         j['MSG'] = 0
@@ -162,7 +200,7 @@ class YoujiProtocol(DeviceProtocol):
         j['time'] = int(time.time())
         str = json.dumps(j) + '\0'
         self.transport.write(str.encode('GB18030'))
-        logger.info(f'·¢ËÍÊı¾İµ½Íù{self.transport.getPeer().host}:{str.encode("GB18030")}')
+        logger.info(f'å‘é€æ•°æ®åˆ°å¾€{self.transport.getPeer().host}:{str.encode("GB18030")}')
 
     def query_all_device_data(self):
         j = {}
@@ -172,4 +210,4 @@ class YoujiProtocol(DeviceProtocol):
         j['owners'] = None
         str = json.dumps(j) + '\0'
         self.transport.write(str.encode('GB18030'))
-        logger.info(f'·¢ËÍÊı¾İµ½Íù{self.transport.getPeer().host}:{str.encode("GB18030")}')
+        logger.info(f'å‘é€æ•°æ®åˆ°å¾€{self.transport.getPeer().host}:{str.encode("GB18030")}')

@@ -1,4 +1,13 @@
+#!/usr/bin/env python
 # -*- coding: utf-8 -*-
+"""
+@FileName：deviceProtocol.py
+@Description：设备协议基类以及相关功能项
+@Author：SimenYY
+@Time：2023/8/28 14:53
+@Department：公路机电工程技术中心
+@Copyright：©1999-2023 浙江中控信息产业股份有限公司
+"""
 
 from twisted.internet.protocol import Protocol
 from twisted.internet import reactor
@@ -12,47 +21,40 @@ class DeviceProtocol(Protocol):
     def dataReceived(self, data: bytes):
         reactor.callInThread(self.dataParse, data)
 
-    def dataParse(self, data: bytes):
+    def dataParse(self, data: bytes) -> None:
         """
-        负责目标数据的解析工作
-        :param data:
-        :return:
+        @param data:
+        @return:
         """
         pass
 
-    def heart_beat(self):
+    def heart_beat(self) -> None:
         pass
 
+    @staticmethod
+    def web_client(cls):
+        cls.remote_host = None
+        cls.remote_port = None
+        return cls
 
-class Interval:
-    """
-    用类的形式定义的通信间隔装饰器，参数输入标准参照方便用户观察的形式，
-    例如‘1/second、3/minute、5/hour’的形式来定义
-    """
-
-    def __init__(self, value: str):
+    @staticmethod
+    def interval(value: str):
         value = value.split('/')
         unit = value[1]
         if 'second' == unit:
-            self.seconds = int(value[0])
+            seconds = int(value[0])
         elif 'minute' == unit:
-            self.seconds = 60 * int(value[0])
+            seconds = 60 * int(value[0])
         elif 'hour' == unit:
-            self.seconds = 3600 * int(value[0])
+            seconds = 3600 * int(value[0])
 
-    def __call__(self, func):
-        @wraps(func)
-        def wrapper(*args, **kwargs):
-            while True:
-                func(*args, **kwargs)
-                time.sleep(self.seconds)
+        def decorator(func):
+            @wraps(func)
+            def wrapper(*args, **kwargs):
+                while True:
+                    func(*args, **kwargs)
+                    time.sleep(seconds)
 
-        return wrapper
+            return wrapper
 
-
-def web_client(cls):
-    cls.remote_host = None
-    cls.remote_port = None
-
-    return cls
-
+        return decorator
